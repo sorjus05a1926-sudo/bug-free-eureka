@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI経営コンサルタント｜経営課題診断・解決提案システム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .step-active {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+      color: #1d4ed8;
+    }
+    .step-done {
+      border-color: #10b981;
+      background-color: #ecfdf5;
+      color: #047857;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      .print-full { width: 100% !important; max-width: 100% !important; box-shadow: none !important; }
+      body { background-color: #ffffff; }
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 p-2 rounded-lg">
+          <i data-lucide="brain-circuit" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-lg tracking-tight">AI経営コンサルタント</h1>
+            <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs px-2 py-0.5 rounded-full font-medium">ロカベン＆対話型深掘り対応</span>
+          </div>
+          <p class="text-xs text-slate-400">潜在課題の発見から90日改善計画・ROI試算・補助金マッチングまで</p>
+        </div>
+      </div>
+
+      <!-- Demo Presets & Utilities -->
+      <div class="flex items-center space-x-2">
+        <div class="hidden md:flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
+          <span class="px-2 text-slate-400 font-medium">デモ企業読込:</span>
+          <button onclick="loadDemoPreset('manufacturing')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-blue-300 transition font-medium">製造業(原価高騰)</button>
+          <button onclick="loadDemoPreset('it')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-emerald-300 transition font-medium">ITサービス(人材不足)</button>
+          <button onclick="loadDemoPreset('retail')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-amber-300 transition font-medium">飲食・小売(集客減)</button>
+        </div>
+        <button onclick="saveToStorage()" class="flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition" title="ブラウザに一時保存">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">一時保存</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stepper Bar -->
+  <div class="bg-white border-b border-slate-200 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="grid grid-cols-5 gap-2">
+        <button onclick="goToStep(1)" id="step-btn-1" class="step-btn flex items-center justify-center sm:justify-start space-x-2 p-2 rounded-lg border-2 text-left transition step-active">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">1</span>
+          <div class="hidden sm:block overflow-hidden">
+            <div class="text-xs font-bold truncate">STEP 1｜基本情報・財務</div>
+            <div class="text-[10px] text-slate-500 truncate">基本10問＋核心3問＋財務</div>
+          </div>
+        </button>
+        <button onclick="goToStep(2)" id="step-btn-2" class="step-btn flex items-center justify-center sm:justify-start space-x-2 p-2 rounded-lg border-2 border-slate-200 text-left transition hover:bg-slate-50">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+          <div class="hidden sm:block overflow-hidden">
+            <div class="text-xs font-bold truncate">STEP 2｜10分野・30問診断</div>
+            <div class="text-[10px] text-slate-500 truncate">経営全般の網羅的チェック</div>
+          </div>
+        </button>
+        <button onclick="goToStep(3)" id="step-btn-3" class="step-btn flex items-center justify-center sm:justify-start space-x-2 p-2 rounded-lg border-2 border-slate-200 text-left transition hover:bg-slate-50">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+          <div class="hidden sm:block overflow-hidden">
+            <div class="text-xs font-bold truncate">STEP 3｜AI対話深掘り</div>
+            <div class="text-[10px] text-slate-500 truncate">課題→原因仮説→真因特定</div>
+          </div>
+        </button>
+        <button onclick="goToStep(4)" id="step-btn-4" class="step-btn flex items-center justify-center sm:justify-start space-x-2 p-2 rounded-lg border-2 border-slate-200 text-left transition hover:bg-slate-50">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">4</span>
+          <div class="hidden sm:block overflow-hidden">
+            <div class="text-xs font-bold truncate">STEP 4｜AI経営・優先度分析</div>
+            <div class="text-[10px] text-slate-500 truncate">100点評価・因果関係・ロカベン</div>
+          </div>
+        </button>
+        <button onclick="goToStep(5)" id="step-btn-5" class="step-btn flex items-center justify-center sm:justify-start space-x-2 p-2 rounded-lg border-2 border-slate-200 text-left transition hover:bg-slate-50">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">5</span>
+          <div class="hidden sm:block overflow-hidden">
+            <div class="text-xs font-bold truncate">STEP 5｜経営改善提案書</div>
+            <div class="text-[10px] text-slate-500 truncate">90日計画・効果試算・支援制度</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== STEP 1: 企業の基本情報・核心3問・財務データ ==================== -->
+    <section id="step-1" class="step-section space-y-6">
+      <!-- Intro Banner -->
+      <div class="bg-gradient-to-r from-blue-900 to-slate-900 rounded-xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="inline-flex items-center space-x-2 bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold border border-blue-400/30">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>経済産業省「ローカルベンチマーク」＆中小企業庁「対話型支援」準拠設計</span>
+          </div>
+          <h2 class="text-xl font-bold">STEP 1：企業の基本情報と「経営者の核心3問」</h2>
+          <p class="text-sm text-slate-300">まずは基本情報10問と、経営者ご自身が現在認識されている課題・理想像をお聞かせください。決算書データの自動読取（シミュレーション）にも対応しています。</p>
+        </div>
+        <div class="flex flex-wrap gap-2 shrink-0">
+          <button onclick="loadDemoPreset('manufacturing')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition flex items-center space-x-1.5">
+            <i data-lucide="factory" class="w-4 h-4"></i>
+            <span>サンプル企業（製造業）を自動入力</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. 企業の基本情報 (10問) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+          <div class="flex items-center space-x-2">
+            <span class="bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded text-xs">基本情報 10項目</span>
+            <h3 class="text-base font-bold text-slate-800">企業のプロフィール</h3>
+          </div>
+          <span class="text-xs text-slate-400">※業種・従業員規模に応じて以降の診断アルゴリズムが最適化されます</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- No.1 企業名 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">1. 企業名 <span class="text-slate-400 font-normal">(任意)</span></label>
+            <input type="text" id="comp-name" placeholder="例：株式会社サンプル製作所" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <!-- No.2 本社所在地 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">2. 本社所在地（都道府県・市区町村）</label>
+            <input type="text" id="comp-location" placeholder="例：大阪府東大阪市" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <!-- No.3 業種 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">3. 業種・具体的な事業内容 <span class="text-blue-600 font-normal">★業種別診断連動</span></label>
+            <select id="comp-industry" onchange="updateIndustryQuestions()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+              <option value="製造業">製造業（金属加工・機械・食品等）</option>
+              <option value="建設業">建設業・設備工事業</option>
+              <option value="情報通信業">情報通信業（IT・ソフトウェア・Web）</option>
+              <option value="卸売・小売業">卸売・小売業・EC</option>
+              <option value="飲食・宿泊業">飲食業・宿泊サービス業</option>
+              <option value="医療・福祉">医療・介護・福祉事業</option>
+              <option value="サービス業">専門・技術・その他サービス業</option>
+            </select>
+          </div>
+          <!-- No.4 創業・設立年 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">4. 創業・設立年（西暦）</label>
+            <input type="number" id="comp-founded" placeholder="例：1995" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <!-- No.5 従業員数 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">5. 従業員数（正社員・パート含む） <span class="text-blue-600 font-normal">★規模別連動</span></label>
+            <div class="flex items-center space-x-2">
+              <input type="number" id="comp-employees" placeholder="20" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+              <span class="text-xs text-slate-500 shrink-0">名</span>
+            </div>
+          </div>
+          <!-- No.6 年間売上高 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">6. 年間売上高（直近期）</label>
+            <div class="flex items-center space-x-2">
+              <input type="number" id="comp-sales" placeholder="30000" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+              <span class="text-xs text-slate-500 shrink-0">万円</span>
+            </div>
+          </div>
+          <!-- No.7 営業利益または赤字額 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">7. 営業利益（赤字の場合はマイナス入力）</label>
+            <div class="flex items-center space-x-2">
+              <input type="number" id="comp-profit" placeholder="600" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+              <span class="text-xs text-slate-500 shrink-0">万円</span>
+            </div>
+          </div>
+          <!-- No.8 主な商品・サービス -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">8. 主な商品・サービス</label>
+            <input type="text" id="comp-products" placeholder="例：産業機械向け精密金属部品の切削加工" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <!-- No.9 主な顧客 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">9. 主な顧客層（複数選択可）</label>
+            <div class="flex flex-wrap gap-2 pt-1" id="comp-customers">
+              <label class="inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded text-xs cursor-pointer">
+                <input type="checkbox" value="法人(BtoB)" checked class="rounded text-blue-600">
+                <span>法人(BtoB)</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded text-xs cursor-pointer">
+                <input type="checkbox" value="個人(BtoC)" class="rounded text-blue-600">
+                <span>個人(BtoC)</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded text-xs cursor-pointer">
+                <input type="checkbox" value="官公庁・自治体" class="rounded text-blue-600">
+                <span>官公庁</span>
+              </label>
+            </div>
+          </div>
+          <!-- No.10 今後3年間の経営目標 -->
+          <div class="md:col-span-2 lg:col-span-3">
+            <label class="block text-xs font-bold text-slate-700 mb-1">10. 今後3年間の経営目標（売上・利益目標や事業方針）</label>
+            <input type="text" id="comp-goal" placeholder="例：年商3.5億円・営業利益率7%への回復、特定の主要取引先への依存脱却と省力化投資の完了" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 特に重要な3つの質問（主観課題・理想像・最大の障害） -->
+      <div class="bg-amber-50/70 rounded-xl shadow-sm border-2 border-amber-200 p-6">
+        <div class="flex items-start justify-between border-b border-amber-200/80 pb-4 mb-5">
+          <div class="flex items-center space-x-2.5">
+            <div class="bg-amber-500 text-white p-2 rounded-lg">
+              <i data-lucide="compass" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">経営者の主観と客観データのギャップ分析用</span>
+              <h3 class="text-base font-bold text-slate-900">特に重要な「経営者への3つの核心質問」</h3>
+            </div>
+          </div>
+          <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-300">潜在課題抽出の鍵</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <label class="block text-xs font-bold text-slate-800 mb-2">
+              <span class="text-amber-600 mr-1">核心Q1.</span>現在、経営者が最も困っていることは何ですか？（自覚している課題）
+            </label>
+            <textarea id="core-q1" rows="3" placeholder="例：原材料費と電気代が上がり続けているのに、主要取引先に価格転嫁できず利益がほとんど残らないこと。" class="w-full rounded border border-slate-200 p-2.5 text-xs focus:border-amber-500 outline-none"></textarea>
+          </div>
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <label class="block text-xs font-bold text-slate-800 mb-2">
+              <span class="text-amber-600 mr-1">核心Q2.</span>3年後、どのような会社になっていたいですか？（目指す理想像）
+            </label>
+            <textarea id="core-q2" rows="3" placeholder="例：高付加価値な短納期・難削材加工で選ばれ、職人の残業を減らしつつ営業利益率8%以上を安定確保できる会社。" class="w-full rounded border border-slate-200 p-2.5 text-xs focus:border-amber-500 outline-none"></textarea>
+          </div>
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <label class="block text-xs font-bold text-slate-800 mb-2">
+              <span class="text-amber-600 mr-1">核心Q3.</span>理想の状態になるために、現在最も大きな障害は何だと思いますか？
+            </label>
+            <textarea id="core-q3" rows="3" placeholder="例：製品ごとの正確な原価が把握できていないことと、ベテラン職人しか段取りできない属人化した製造工程。" class="w-full rounded border border-slate-200 p-2.5 text-xs focus:border-amber-500 outline-none"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 詳細数値データ＆決算書AI読取（ローカルベンチマーク財務6指標連動） -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-5 gap-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded text-xs">任意・精度向上</span>
+              <h3 class="text-base font-bold text-slate-800">財務諸表・数値データ入力（経済産業省「ローカルベンチマーク」6指標自動算出）</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">自己評価だけでは見えない「儲かる仕組み」「資金滞留」「生産性」を客観数値で検証します。</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <label class="cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="file-scan" class="w-4 h-4"></i>
+              <span>決算書・試算表をAI自動読取 (模擬OCR)</span>
+              <input type="file" accept=".pdf,.csv,.xlsx,.jpg,.png" class="hidden" onchange="simulateOCRUpload(event)">
+            </label>
+          </div>
+        </div>
+
+        <div id="ocr-status" class="hidden mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2.5 rounded-lg text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+            <span id="ocr-status-text">決算書データから財務・労務数値を自動抽出しました。</span>
+          </div>
+          <span class="font-bold">ロカベン6指標 計算準備完了</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">前期売上高 (万円)</label>
+            <input type="number" id="fin-prev-sales" value="31500" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">売上総利益/粗利 (万円)</label>
+            <input type="number" id="fin-gross-profit" value="5400" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">付加価値額 (万円) <span class="text-[10px] text-slate-400">※営業利益+人件費+減価償却</span></label>
+            <input type="number" id="fin-value-added" value="11000" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">総資産 (万円)</label>
+            <input type="number" id="fin-total-assets" value="24000" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">純資産 (万円)</label>
+            <input type="number" id="fin-net-assets" value="7200" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">現預金 (万円)</label>
+            <input type="number" id="fin-cash" value="3200" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">有利子負債/借入金 (万円)</label>
+            <input type="number" id="fin-debt" value="12500" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">減価償却費 (万円)</label>
+            <input type="number" id="fin-depreciation" value="1200" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">売掛金・受取手形 (万円)</label>
+            <input type="number" id="fin-receivables" value="5500" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">棚卸資産/在庫 (万円)</label>
+            <input type="number" id="fin-inventory" value="3800" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">買掛金・支払手形 (万円)</label>
+            <input type="number" id="fin-payables" value="2800" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">年間離職者数 (名)</label>
+            <input type="number" id="fin-turnover" value="3" class="w-full rounded border border-slate-300 px-2.5 py-1.5">
+          </div>
+        </div>
+
+        <!-- Privacy / Data Consent Checkbox -->
+        <div class="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <label class="inline-flex items-center space-x-2 text-xs text-slate-600 cursor-pointer">
+            <input type="checkbox" id="consent-check" checked class="rounded text-blue-600 w-4 h-4">
+            <span>入力された企業情報・財務データの暗号化保護およびAI診断エンジンへの送信に同意します（仕様9準拠）</span>
+          </label>
+          <button onclick="goToStep(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition flex items-center space-x-2">
+            <span>STEP 2：10分野・30問の簡易診断へ進む</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 2: 経営全般の簡易診断（10分野・30問＋業種別質問） ==================== -->
+    <section id="step-2" class="step-section hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <span class="bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded text-xs">STEP 2｜10分野・30問＋業種別診断</span>
+            <h2 class="text-lg font-bold text-slate-900 mt-1">経営課題を把握する網羅的チェックリスト</h2>
+            <p class="text-xs text-slate-500">各質問に対し、現状に最も近いものを選択してください。「わからない」と「該当しない」は別データとして記録・分析されます。</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700">
+              回答進捗: <span id="q-progress-count" class="text-blue-600 font-bold">30</span> / 30問
+            </div>
+            <button onclick="goToStep(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow transition flex items-center space-x-1.5">
+              <span>回答を完了してAI深掘り質問へ</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="flex overflow-x-auto gap-1.5 py-3 border-b border-slate-100 no-scrollbar" id="cat-tabs">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Questions Container -->
+        <div id="questions-container" class="space-y-4 mt-4">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Industry Specific Bonus Check -->
+        <div class="mt-6 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="bg-indigo-600 text-white text-[11px] font-bold px-2 py-0.5 rounded">差別化機能：業種・規模別診断</span>
+              <h4 class="text-sm font-bold text-indigo-950" id="ind-special-title">製造業・規模別の追加チェック項目</h4>
+            </div>
+          </div>
+          <div id="ind-special-questions" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <!-- Populated dynamically by JS based on selected industry -->
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
+          <button onclick="goToStep(1)" class="text-slate-600 hover:text-slate-900 font-medium text-xs flex items-center space-x-1">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>STEP 1（基本情報）に戻る</span>
+          </button>
+          <button onclick="goToStep(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition flex items-center space-x-2">
+            <span>STEP 3：AIによる追加質問（深掘り対話）へ進む</span>
+            <i data-lucide="message-square-more" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 3: AIによる追加質問（課題別の深掘り＆対話エンジン） ==================== -->
+    <section id="step-3" class="step-section hidden space-y-6">
+      <div class="bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 rounded-xl p-6 text-white shadow-lg">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-xs font-bold px-2.5 py-1 rounded-full">STEP 3｜AIによる動的追加質問（深掘り機能）</span>
+            <h2 class="text-xl font-bold mt-2">「課題 → 原因の仮説 → 原因の確認 → 解決策」対話型深掘り診断</h2>
+            <p class="text-xs text-slate-300 mt-1">30問の回答と財務データから、問題の可能性が高い分野をAIが自動抽出しました。表面的な現象（例：売上減少・利益低下）の背後にある「真因」を特定します。</p>
+          </div>
+          <button onclick="goToStep(4)" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-xs shadow-lg transition flex items-center space-x-2 shrink-0">
+            <span>深掘りを完了してAI経営分析へ</span>
+            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert banner for low-score fields detected -->
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="bg-rose-100 text-rose-600 p-2 rounded-lg">
+            <i data-lucide="radar" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">AIが30問の回答から「重点深掘り対象」として検出した分野：</div>
+            <div id="detected-weak-fields" class="flex flex-wrap gap-1.5 mt-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500">※他の分野もタブから自由に切り替えて深掘り回答できます</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: 8 Field Deep-Dive Questions -->
+        <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center space-x-2">
+            <i data-lucide="list-checks" class="w-4 h-4 text-blue-600"></i>
+            <span>分野別の追加質問（回答に応じて真因を特定）</span>
+          </h3>
+
+          <!-- 8 Deep-Dive Category Selector Pills -->
+          <div class="flex flex-wrap gap-1.5 pb-3 border-b border-slate-100" id="deep-dive-tabs">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Deep-Dive Form Area -->
+          <div id="deep-dive-questions-area" class="space-y-4 mt-4 flex-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive AI Consultant Chat ("課題 → 原因の仮説 → 原因の確認 → 解決策") -->
+        <div class="lg:col-span-5 bg-slate-900 rounded-xl shadow-lg border border-slate-800 p-5 text-white flex flex-col h-[620px]">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+              <h3 class="text-sm font-bold">AI経営コンサルタント 対話深掘りセッション</h3>
+            </div>
+            <button onclick="resetAIChat()" class="text-[11px] text-slate-400 hover:text-white flex items-center space-x-1 bg-slate-800 px-2 py-1 rounded">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+              <span>対話リセット</span>
+            </button>
+          </div>
+
+          <!-- Hypothesis Tracker Bar -->
+          <div class="bg-slate-800/90 rounded-lg p-2.5 mb-3 border border-slate-700 text-[11px]">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span>推論プロセス:</span>
+              <span id="chat-stage-badge" class="text-blue-300 font-bold">STEP 1: 現象の確認</span>
+            </div>
+            <div class="grid grid-cols-4 gap-1 text-center font-semibold">
+              <div id="proc-1" class="bg-blue-600 text-white py-1 rounded">①課題把握</div>
+              <div id="proc-2" class="bg-slate-700 text-slate-400 py-1 rounded">②原因仮説</div>
+              <div id="proc-3" class="bg-slate-700 text-slate-400 py-1 rounded">③真因確認</div>
+              <div id="proc-4" class="bg-slate-700 text-slate-400 py-1 rounded">④解決方針</div>
+            </div>
+          </div>
+
+          <!-- Chat History Container -->
+          <div id="ai-chat-history" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Quick Choice Options / User Input -->
+          <div class="mt-3 pt-3 border-t border-slate-800 space-y-2">
+            <div id="ai-chat-options" class="flex flex-wrap gap-1.5">
+              <!-- Dynamic option chips populated by JS -->
+            </div>
+            <div class="flex space-x-2">
+              <input type="text" id="ai-chat-input" placeholder="自由入力でAIコンサルタントに回答・相談..." class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500 outline-none" onkeydown="if(event.key==='Enter') sendCustomChatMessage()">
+              <button onclick="sendCustomChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold transition">送信</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
+        <button onclick="goToStep(2)" class="text-slate-600 hover:text-slate-900 font-medium text-xs flex items-center space-x-1">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>STEP 2（30問診断）に戻る</span>
+        </button>
+        <button onclick="goToStep(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition flex items-center space-x-2">
+          <span>STEP 4：AI経営分析・課題の優先順位付けへ進む</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 4: AI経営分析（優先順位100点評価・因果関係・ローカルベンチマーク） ==================== -->
+    <section id="step-4" class="step-section hidden space-y-6">
+      <!-- Emergency Alert Banner (Conditional) -->
+      <div id="emergency-alert" class="hidden bg-rose-950 text-white border-2 border-rose-500 rounded-xl p-4 shadow-lg flex items-start space-x-3">
+        <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-400 shrink-0 mt-0.5"></i>
+        <div class="text-xs space-y-1">
+          <div class="font-bold text-sm text-rose-300">【緊急対応アラート】資金ショートまたは重大な経営リスクの兆候が検出されました</div>
+          <p id="emergency-alert-text" class="text-rose-100">スコアにかかわらず、最優先で資金繰り表の作成および金融機関への条件変更・つなぎ融資相談を実施してください。</p>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded text-xs">STEP 4｜AI経営分析・優先順位決定</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-1">多角的経営診断＆課題の優先順位マトリクス</h2>
+            <p class="text-xs text-slate-500">「経営への影響度(40点)」「解決の緊急性(30点)」「実現可能性(20点)」「費用対効果(10点)」の計100点満点で課題を定量評価し、因果関係を可視化します。</p>
+          </div>
+          <button onclick="goToStep(5)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-lg text-xs shadow transition flex items-center space-x-2 shrink-0">
+            <span>最終成果物：AI経営改善提案レポートを見る</span>
+            <i data-lucide="file-Spreadsheet" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 1: Radar Chart (10 Categories) & Priority Ranking Table -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- 10-Category Radar Chart -->
+        <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2 mb-1">
+              <i data-lucide="hexagon" class="w-4 h-4 text-blue-600"></i>
+              <span>10分野別 経営診断レーダーチャート</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 mb-3">青線：自社スコア ／ 点線：同業種・同規模ベンチマーク平均</p>
+          </div>
+          <div class="relative h-72 w-full flex items-center justify-center">
+            <canvas id="radarChart"></canvas>
+          </div>
+          <div id="gap-insight-box" class="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-700">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Priority Evaluation Matrix (40/30/20/10 = 100pt) -->
+        <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                <span>経営課題の優先順位ランキング（100点満点評価モデル）</span>
+              </h3>
+              <p class="text-[11px] text-slate-500">影響度(40点) ＋ 緊急性(30点) ＋ 実現可能性(20点) ＋ 費用対効果(10点) ＝ 100点</p>
+            </div>
+          </div>
+
+          <div id="priority-ranking-list" class="space-y-3">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Causal Relationship Analysis (課題相互の因果関係マップ) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-0.5 rounded">AI因果関係推論</span>
+            <h3 class="text-base font-bold text-slate-800 mt-1">課題相互の因果関係マップ（どこから手を付けるべきか）</h3>
+            <p class="text-xs text-slate-500">個別の課題をバラバラに対処するのではなく、「根本原因」を解決することで連鎖的に複数の課題を解消するルートを提示します。</p>
+          </div>
+        </div>
+        <div id="causal-map-container" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Row 3: METI Local Benchmark (ローカルベンチマーク財務6指標＋業務・営業分析) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded">経済産業省「ローカルベンチマーク」準拠</span>
+            <h3 class="text-base font-bold text-slate-800 mt-1">財務6指標＆客観数値データ分析</h3>
+          </div>
+          <span class="text-xs text-slate-500">STEP 1で入力された決算・業務データから自動算出</span>
+        </div>
+
+        <div id="locaben-metrics-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
+        <button onclick="goToStep(3)" class="text-slate-600 hover:text-slate-900 font-medium text-xs flex items-center space-x-1">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>STEP 3（AI深掘り質問）に戻る</span>
+        </button>
+        <button onclick="goToStep(5)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition flex items-center space-x-2">
+          <span>STEP 5：最終「AI経営改善提案レポート」を出力</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 5: 最終的にAIが提案する経営改善レポート ==================== -->
+    <section id="step-5" class="step-section hidden space-y-6">
+      <!-- Action Bar (No Print) -->
+      <div class="bg-slate-900 text-white rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 no-print shadow-md">
+        <div class="flex items-center space-x-3">
+          <i data-lucide="file-check-2" class="w-6 h-6 text-emerald-400"></i>
+          <div>
+            <h2 class="text-sm font-bold">最終成果物：AI経営改善提案レポートが完成しました</h2>
+            <p class="text-xs text-slate-400">PDF直接ダウンロード、またはテキストコピー・HTML保存して社内会議や金融機関との対話資料として活用できます。</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-pdf-download" onclick="exportReportPDF()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition">
+            <i data-lucide="file-down" class="w-4 h-4"></i>
+            <span id="btn-pdf-text">PDFファイルとして保存</span>
+          </button>
+          <button onclick="downloadStandaloneReport()" class="bg-white text-slate-900 hover:bg-slate-100 font-bold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow transition" title="別タブで開いて印刷できるHTMLファイルを保存します">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>印刷用ファイル出力</span>
+          </button>
+          <button onclick="copyReportText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>テキストをコピー</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Report Sheet -->
+      <div id="printable-report-area" class="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-8 space-y-8 print-full">
+        
+        <!-- Report Header Summary (Matches Section 7 Mockup) -->
+        <div class="border-b-2 border-slate-900 pb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 mb-1">
+              <span>AI経営改善提案レポート｜出力診断書</span>
+              <span>•</span>
+              <span id="rep-date"></span>
+            </div>
+            <h1 id="rep-company-name" class="text-2xl sm:text-3xl font-bold text-slate-900">株式会社サンプル製作所</h1>
+            <p id="rep-company-sub" class="text-sm text-slate-600 mt-1">製造業・従業員20名・年商3億円（大阪府東大阪市）</p>
+          </div>
+
+          <!-- 3 Summary KPI Cards -->
+          <div class="grid grid-cols-3 gap-3 shrink-0">
+            <div class="bg-slate-900 text-white px-4 py-3 rounded-xl text-center min-w-[110px]">
+              <div class="text-[11px] text-slate-400">総合評価</div>
+              <div class="text-2xl font-bold mt-0.5"><span id="rep-total-score" class="text-emerald-400">62</span><span class="text-xs text-slate-400">/100</span></div>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl text-center min-w-[110px]">
+              <div class="text-[11px] text-rose-700 font-semibold">重要課題</div>
+              <div class="text-2xl font-bold text-rose-600 mt-0.5"><span id="rep-issue-count">3</span><span class="text-xs">件</span></div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 px-4 py-3 rounded-xl text-center min-w-[110px]">
+              <div class="text-[11px] text-blue-700 font-semibold">改善計画</div>
+              <div class="text-2xl font-bold text-blue-700 mt-0.5">90<span class="text-xs">日</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. 最優先の経営課題 & 原因分析 -->
+        <div class="bg-rose-50/60 border-l-4 border-rose-600 rounded-r-xl p-5">
+          <div class="flex items-center space-x-2 text-xs font-bold text-rose-700 uppercase">
+            <i data-lucide="flame" class="w-4 h-4"></i>
+            <span>最優先の経営課題（Priority #1）</span>
+          </div>
+          <h3 id="rep-top-issue-title" class="text-lg font-bold text-slate-900 mt-1">製造原価の上昇と利益率の低下</h3>
+          <p id="rep-top-issue-desc" class="text-xs text-slate-700 mt-2 leading-relaxed">
+            営業利益率が5%から2%に低下。原材料価格の上昇、作業効率の低下、販売価格への転嫁不足が原因の候補。追加ヒアリングおよび原価データとの照合により、不採算ロットの放置と段取り時間の属人化が真因として特定されました。
+          </p>
+        </div>
+
+        <!-- 2. 具体的な改善提案 & 対策比較テーブル（費用・効果・難易度） -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-6 h-6 rounded bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+              <span>具体的な改善提案と対策オプション比較（費用・効果・難易度）</span>
+            </h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                  <th class="py-2.5 px-3 font-bold">改善施策オプション</th>
+                  <th class="py-2.5 px-3 font-bold">具体的なアクション内容</th>
+                  <th class="py-2.5 px-3 font-bold">想定費用</th>
+                  <th class="py-2.5 px-3 font-bold">期待効果</th>
+                  <th class="py-2.5 px-3 font-bold">実行難易度</th>
+                  <th class="py-2.5 px-3 font-bold">推奨度</th>
+                </tr>
+              </thead>
+              <tbody id="rep-solutions-table" class="divide-y divide-slate-200">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. 90日間の行動計画（ロードマップ・実行責任者・KPI） -->
+        <div class="space-y-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+            <span class="w-6 h-6 rounded bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+            <span>90日間の行動計画（アクションプラン・実行責任者・KPI）</span>
+          </h3>
+          <div id="rep-roadmap-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- 4. 期待効果の試算シミュレーター（インタラクティブROI試算） -->
+        <div class="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-xl p-6 shadow-inner">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700 pb-4 mb-5">
+            <div>
+              <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full">インタラクティブ収益改善シミュレーター</span>
+              <h3 class="text-base font-bold mt-1">期待効果の試算（営業利益の改善可能性・投資回収期間）</h3>
+              <p class="text-xs text-slate-300">スライダーを動かすことで、原価改善・価格転嫁・省力化による年間営業利益の改善インパクトを試算できます。</p>
+            </div>
+            <div class="bg-white/10 border border-white/15 rounded-xl px-5 py-3 text-right shrink-0">
+              <div class="text-xs text-emerald-300 font-semibold">年間営業利益の改善可能性（試算）</div>
+              <div class="text-3xl font-bold text-white mt-0.5">+<span id="sim-profit-impact">600</span><span class="text-base font-normal ml-1">万円 / 年</span></div>
+              <div id="sim-new-margin" class="text-[11px] text-slate-300 mt-0.5">改善後の想定営業利益: 1,200万円 (利益率 4.0%)</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700">
+              <div class="flex justify-between font-bold mb-2">
+                <span>① 原価低減・歩留まり改善率</span>
+                <span class="text-emerald-400"><span id="sim-cost-val">2.0</span>%</span>
+              </div>
+              <input type="range" id="sim-cost-slider" min="0" max="5" step="0.5" value="2.0" oninput="updateROISimulation()" class="w-full accent-emerald-400 cursor-pointer">
+              <p class="text-[11px] text-slate-400 mt-2">製品別原価の可視化・不採算品の見直しによる改善</p>
+            </div>
+
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700">
+              <div class="flex justify-between font-bold mb-2">
+                <span>② 適正価格転嫁による単価向上</span>
+                <span class="text-blue-400"><span id="sim-price-val">1.0</span>%</span>
+              </div>
+              <input type="range" id="sim-price-slider" min="0" max="5" step="0.5" value="1.0" oninput="updateROISimulation()" class="w-full accent-blue-400 cursor-pointer">
+              <p class="text-[11px] text-slate-400 mt-2">原価根拠資料を用いた主要顧客との価格改定交渉</p>
+            </div>
+
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700">
+              <div class="flex justify-between font-bold mb-2">
+                <span>③ 省力化投資・IT導入予定額</span>
+                <span class="text-amber-400"><span id="sim-invest-val">450</span>万円</span>
+              </div>
+              <input type="range" id="sim-invest-slider" min="0" max="2000" step="50" value="450" oninput="updateROISimulation()" class="w-full accent-amber-400 cursor-pointer">
+              <p id="sim-payback-text" class="text-[11px] text-amber-300 mt-2 font-semibold">想定投資回収期間: 約 0.5 年（6ヶ月）</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. SWOT分析 × 外部環境分析 -->
+        <div class="space-y-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+            <span class="w-6 h-6 rounded bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+            <span>SWOT分析＆外部環境・業界動向クロス分析</span>
+          </h3>
+          <div id="rep-swot-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- 6. 活用可能な補助金・助成金・公的支援制度（方針遵守：経営上の必要性を確認した後の資金調達選択肢） -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-6 h-6 rounded bg-blue-600 text-white text-xs flex items-center justify-center font-bold">4</span>
+              <span>改善計画の実行に活用可能な補助金・助成金（資金調達の選択肢）</span>
+            </h3>
+            <span class="text-[11px] bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-medium">※補助金ありきではなく、経営改善計画の投資負担を軽減する手段として提示</span>
+          </div>
+          <div id="rep-subsidies-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Populated by JS -->
+          </div>
+          <p class="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <strong>【重要事項】</strong> 補助金・助成金制度は公募回や時期によって要件・補助率・対象経費が変更されます。申請にあたっては必ず最新の公式公募要領をご確認のうえ、認定経営革新等支援機関（商工会議所・金融機関・税理士・中小企業診断士等）と連携して進めてください。
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-12 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+      <div>AI経営コンサルタント（AI経営課題診断・解決提案アプリ） - 経済産業省ローカルベンチマーク＆中小企業庁対話型支援準拠</div>
+      <div class="flex items-center space-x-4">
+        <span>暗号化データ保護対応</span>
+        <span>•</span>
+        <span>段階的診断アーキテクチャ (STEP 1〜5)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // --- 1. MASTER DATA: 10 FIELDS & 30 QUESTIONS ---
+    const categories = [
+      { id: 1, name: "① 経営戦略・事業計画", short: "経営戦略" },
+      { id: 2, name: "② 売上・営業・マーケティング", short: "売上・営業" },
+      { id: 3, name: "③ 利益・財務・資金繰り", short: "利益・財務" },
+      { id: 4, name: "④ 人材採用・育成・労務管理", short: "人材・労務" },
+      { id: 5, name: "⑤ 生産性・業務効率化", short: "業務効率化" },
+      { id: 6, name: "⑥ IT・DX・AI活用", short: "IT・AI活用" },
+      { id: 7, name: "⑦ 商品開発・新規事業", short: "商品・新事業" },
+      { id: 8, name: "⑧ 組織運営・経営管理", short: "組織運営" },
+      { id: 9, name: "⑨ リスク管理・事業継続", short: "リスク管理" },
+      { id: 10, name: "⑩ 設備投資・事業承継・成長投資", short: "投資・承継" }
+    ];
+
+    const questions30 = [
+      // ① 経営戦略・事業計画
+      { id: "Q1", cat: 1, text: "3〜5年後の会社の目標や将来像が明確になっていますか？" },
+      { id: "Q2", cat: 1, text: "自社の強みや競合他社との違いを把握していますか？" },
+      { id: "Q3", cat: 1, text: "年間の経営計画を作成し、定期的に進捗を確認していますか？" },
+      // ② 売上・営業・マーケティング
+      { id: "Q4", cat: 2, text: "新規顧客を継続的に獲得できていますか？" },
+      { id: "Q5", cat: 2, text: "既存顧客のリピート購入や継続取引を増やせていますか？" },
+      { id: "Q6", cat: 2, text: "営業活動や広告宣伝の効果を数値で把握していますか？" },
+      // ③ 利益・財務・資金繰り
+      { id: "Q7", cat: 3, text: "商品やサービスごとの利益を把握していますか？" },
+      { id: "Q8", cat: 3, text: "原価上昇に対応して価格の見直しができていますか？" },
+      { id: "Q9", cat: 3, text: "将来の資金繰りを予測し、資金不足に備えていますか？" },
+      // ④ 人材採用・育成・労務管理
+      { id: "Q10", cat: 4, text: "必要な人材を計画どおりに採用できていますか？" },
+      { id: "Q11", cat: 4, text: "従業員の教育・育成が計画的にできていますか？" },
+      { id: "Q12", cat: 4, text: "従業員の定着や働きやすさ、適切な労務管理に取り組めていますか？" },
+      // ⑤ 生産性・業務効率化
+      { id: "Q13", cat: 5, text: "日常業務で無駄な作業や重複作業を減らせていますか？" },
+      { id: "Q14", cat: 5, text: "人手不足や業務量の増加に対応できていますか？" },
+      { id: "Q15", cat: 5, text: "業務の手順が標準化され、特定の社員に依存していませんか？" },
+      // ⑥ IT・DX・AI活用
+      { id: "Q16", cat: 6, text: "顧客情報・販売情報・社内情報を適切にデータ管理できていますか？" },
+      { id: "Q17", cat: 6, text: "ITツールによって事務作業や営業活動を効率化できていますか？" },
+      { id: "Q18", cat: 6, text: "AIや自動化技術の活用を検討・実施していますか？" },
+      // ⑦ 商品開発・新規事業
+      { id: "Q19", cat: 7, text: "顧客ニーズや市場の変化を把握していますか？" },
+      { id: "Q20", cat: 7, text: "新商品・新サービスの開発や改善に取り組んでいますか？" },
+      { id: "Q21", cat: 7, text: "既存事業以外の新たな収益源を検討していますか？" },
+      // ⑧ 組織運営・経営管理
+      { id: "Q22", cat: 8, text: "経営者と従業員の間で目標や情報が共有されていますか？" },
+      { id: "Q23", cat: 8, text: "役割分担や責任者が明確になっていますか？" },
+      { id: "Q24", cat: 8, text: "経営者が不在でも主要業務を継続できる体制がありますか？" },
+      // ⑨ リスク管理・事業継続
+      { id: "Q25", cat: 9, text: "情報漏えいやサイバー攻撃への対策を実施していますか？" },
+      { id: "Q26", cat: 9, text: "災害や設備故障などに備えた対策がありますか？" },
+      { id: "Q27", cat: 9, text: "主要顧客・取引先への依存による経営リスクを把握していますか？" },
+      // ⑩ 設備投資・事業承継・成長投資
+      { id: "Q28", cat: 10, text: "老朽化設備の更新や省力化投資を計画的に進めていますか？" },
+      { id: "Q29", cat: 10, text: "設備投資や新事業に必要な資金調達・補助金制度を検討していますか？" },
+      { id: "Q30", cat: 10, text: "今後の事業拡大や事業承継について計画を立てていますか？" }
+    ];
+
+    // 5-stage scale + distinct "わからない" (-1) and "該当しない" (-2)
+    const answerOptions = [
+      { value: 5, label: "十分できている", color: "bg-emerald-600 text-white border-emerald-600" },
+      { value: 4, label: "おおむねできている", color: "bg-teal-500 text-white border-teal-500" },
+      { value: 3, label: "どちらともいえない", color: "bg-slate-500 text-white border-slate-500" },
+      { value: 2, label: "あまりできていない", color: "bg-amber-500 text-white border-amber-500" },
+      { value: 1, label: "まったくできていない", color: "bg-rose-600 text-white border-rose-600" },
+      { value: -1, label: "わからない", color: "bg-purple-600 text-white border-purple-600" },
+      { value: -2, label: "該当しない", color: "bg-slate-400 text-white border-slate-400" }
+    ];
+
+    // State storage for 30 answers
+    let answers30 = {};
+    let activeCatTab = 0; // 0 = All
+
+    // --- 2. DEEP DIVE QUESTIONS BY 8 FIELDS ---
+    const deepDiveFields = [
+      {
+        key: "sales",
+        label: "売上・営業",
+        relatedCats: [2],
+        questions: [
+          { id: "dd_s1", q: "1. 売上高は過去3年間でどのように変化しましたか？", opts: ["毎年10%以上減少", "緩やかに減少(3〜5%減)", "横ばい", "増加傾向"] },
+          { id: "dd_s2", q: "2. 新規顧客数は増えていますか、減っていますか？", opts: ["大幅に減っている", "やや減っている", "変わらない", "増えている"] },
+          { id: "dd_s3", q: "3. 問い合わせ（商談）から成約までの割合を把握していますか？", opts: ["把握していない", "おおよそ把握しているが低い", "数値で正確に把握し改善中"] },
+          { id: "dd_s4", q: "4. 失注する最大の理由は何ですか？", opts: ["競合他社との価格差", "納期・対応スピード", "品質・技術スペック不足", "提案力・認知度不足"] },
+          { id: "dd_s5", q: "5. 競合他社と比較して価格・品質・サービスにどのような違いがありますか？", opts: ["品質・納期は優位だが価格が高い", "価格・品質ともに差別化できていない", "特定領域で明確な独自技術がある"] },
+          { id: "dd_s6", q: "6. 売上の上位3社への依存度はどれくらいですか？", opts: ["70%以上（高リスク）", "50%〜70%程度", "30%〜50%程度", "30%未満（分散できている）"] },
+          { id: "dd_s7", q: "7. 営業・広告活動のうち、最も効果が高いものは何ですか？", opts: ["既存顧客・知人からの紹介", "Webサイト・SNS・広告", "展示会・アウトバウンド営業", "特に効果的な施策がない"] }
+        ]
+      },
+      {
+        key: "finance",
+        label: "利益・財務",
+        relatedCats: [3],
+        questions: [
+          { id: "dd_f1", q: "1. 過去3年間で粗利率・営業利益率はどのように推移していますか？", opts: ["原材料・人件費高騰で大きく低下（例: 5%→2%）", "微減傾向", "維持・改善している"] },
+          { id: "dd_f2", q: "2. 製品別・案件別の原価計算（個別原価）を実施していますか？", opts: ["どんぶり勘定で計算できていない", "主要製品のみ概算で把握", "全案件・製品で正確に把握"] },
+          { id: "dd_f3", q: "3. 原価上昇分を販売価格へ転嫁（値上げ交渉）できていますか？", opts: ["失注が怖く全く転嫁できていない", "一部のみ転嫁（不十分）", "根拠データを示し十分転嫁できている"] },
+          { id: "dd_f4", q: "4. 月次の試算表は翌月何日頃に確定していますか？", opts: ["2ヶ月以上遅れる", "翌月20〜30日頃", "翌月10日以内に確定"] }
+        ]
+      },
+      {
+        key: "hr",
+        label: "人材・労務",
+        relatedCats: [4],
+        questions: [
+          { id: "dd_h1", q: "1. 人手不足が最も深刻な職種・階層はどこですか？", opts: ["現場の技能職・エンジニア", "営業・企画職", "次世代のリーダー・管理職", "バックオフィス"] },
+          { id: "dd_h2", q: "2. 直近3年間の離職の主な理由は何ですか？", opts: ["業務負荷・残業の多さ", "給与・評価制度への不満", "人間関係・マネジメント", "定年・高齢化"] },
+          { id: "dd_h3", q: "3. 新入社員・中途社員の育成マニュアルやOJT計画はありますか？", opts: ["現場任せでマニュアルはない", "一部あるが形骸化している", "体系化されている"] }
+        ]
+      },
+      {
+        key: "efficiency",
+        label: "業務効率化",
+        relatedCats: [5],
+        questions: [
+          { id: "dd_e1", q: "1. 現場で最も時間や手戻りが発生しているボトルネック工程はどこですか？", opts: ["段取り替え・手作業の加工/制作", "見積作成・受発注などの事務処理", "検品・手直し・クレーム対応", "会議・社内確認の待ち時間"] },
+          { id: "dd_e2", q: "2. ベテラン社員しか分からない「属人化業務」はどの程度ありますか？", opts: ["主要業務の半数以上が属人化", "一部工程で特定社員に依存", "標準化・多能工化が進んでいる"] },
+          { id: "dd_e3", q: "3. 1人あたりの残業時間や業務負荷はどうなっていますか？", opts: ["特定の人材に残業が集中している", "全体的に残業が多い", "適正範囲内で推移"] }
+        ]
+      },
+      {
+        key: "it_ai",
+        label: "IT・AI",
+        relatedCats: [6],
+        questions: [
+          { id: "dd_i1", q: "1. 社内の基幹データ（受発注・在庫・顧客・原価）は何で管理していますか？", opts: ["紙・ホワイトボード・個人Excel", "部署ごとにバラバラのシステム", "クラウド・基幹システムで一元化"] },
+          { id: "dd_i2", q: "2. 生成AIや自動化ツール（RPA等）の導入障壁は何ですか？", opts: ["どう業務に使えばいいか分からない", "推進できるIT人材がいない", "セキュリティや費用対効果の懸念"] }
+        ]
+      },
+      {
+        key: "product",
+        label: "商品・新規事業",
+        relatedCats: [7],
+        questions: [
+          { id: "dd_p1", q: "1. 主力商品・サービスの市場ライフサイクルはどの段階ですか？", opts: ["成熟・縮小期（価格競争が激しい）", "安定期", "成長期"] },
+          { id: "dd_p2", q: "2. 自社の技術・ノウハウを転用できそうな新分野の仮説はありますか？", opts: ["全く思い浮かばない", "アイデアはあるが検証できていない", "すでに試作・テストマーケティング中"] }
+        ]
+      },
+      {
+        key: "strategy",
+        label: "経営戦略・組織",
+        relatedCats: [1, 8],
+        questions: [
+          { id: "dd_st1", q: "1. 経営者自身の時間の使い方はどうなっていますか？", opts: ["現場作業やトラブル対応で手一杯", "営業活動が中心", "将来の戦略策定や組織づくりに時間を割けている"] },
+          { id: "dd_st2", q: "2. ナンバー2（右腕・次世代幹部）は育っていますか？", opts: ["不在で全て社長が判断している", "候補はいるが権限委譲が不十分", "幹部チームが自走している"] }
+        ]
+      },
+      {
+        key: "risk_invest",
+        label: "リスク・設備投資",
+        relatedCats: [9, 10],
+        questions: [
+          { id: "dd_r1", q: "1. 主要設備の老朽化や更新投資の状況はどうですか？", opts: ["15年以上経過し故障リスクが高い", "更新したいが投資回収が見えない", "計画的に省力化投資を実施中"] },
+          { id: "dd_r2", q: "2. 事業承継（後継者）の準備状況はどうですか？", opts: ["後継者未定・未着手", "候補はいるが承継計画は未策定", "計画に基づき移行中（または当面不要）"] }
+        ]
+      }
+    ];
+
+    let activeDeepDiveKey = "sales";
+    let deepDiveAnswers = {};
+
+    // --- 3. AI CONVERSATIONAL DEEP-DIVE ENGINE ---
+    let chatStage = 1;
+    let chatHistory = [];
+
+    function initAIChat() {
+      const compName = document.getElementById("comp-name")?.value || "貴社";
+      chatStage = 1;
+      updateChatProcessBar(1);
+      chatHistory = [
+        {
+          role: "ai",
+          text: `${compName}の30問診断と財務データを拝見しました。特に「利益率の低下（原価高騰・価格転嫁）」と「現場業務の属人化・非効率」に強い相関が見られます。\n\nまず【①課題の把握】として、過去3年間の売上・利益はどのように推移していますか？`
+        }
+      ];
+      renderAIChat();
+      renderChatOptions([
+        "売上は横ばい〜微減だが、利益率が5%→2%へ大きく低下している",
+        "売上が毎年10%程度減少している",
+        "売上は増えているが、人手不足で現場が回らない"
+      ]);
+    }
+
+    function handleChatOptionClick(selectedText) {
+      chatHistory.push({ role: "user", text: selectedText });
+
+      if (chatStage === 1) {
+        chatStage = 2;
+        updateChatProcessBar(2);
+        chatHistory.push({
+          role: "ai",
+          text: `ありがとうございます。次に【②原因の仮説】を検証します。\n利益率低下（または売上減少）の主な要因として、現場感覚ではどれが最も近いですか？`
+        });
+        renderChatOptions([
+          "原材料・外注費が上がったが、競合との価格競争で値上げできない",
+          "既存顧客からの注文ロットが減り、段取り替え等の非効率が増えた",
+          "人手不足で残業や手戻りが増え、製造原価を圧迫している"
+        ]);
+      } else if (chatStage === 2) {
+        chatStage = 3;
+        updateChatProcessBar(3);
+        chatHistory.push({
+          role: "ai",
+          text: `なるほど、核心が見えてきました。そこで【③真因の確認】として以下の4点を教えてください。\n・他社との価格差は何％程度か\n・製品別の正確な原価（不採算品）を把握できているか\n・品質・納期・技術面での優位性はあるか`
+        });
+        renderChatOptions([
+          "品質・短納期には優位性があるが、製品別の正確な原価が未把握で価格交渉の根拠がない",
+          "他社と5〜10%の価格差があり、単純な値下げをすると赤字になる",
+          "ベテラン職人に工程が依存しており、原価削減の余地が見えない"
+        ]);
+      } else if (chatStage === 3) {
+        chatStage = 4;
+        updateChatProcessBar(4);
+        chatHistory.push({
+          role: "ai",
+          text: `【④解決策の方向性】が確定しました！\n単純な値下げや無理な営業拡大を行うのではなく、\n1. **製品別原価の可視化と不採算商品の特定**\n2. **製造工程の標準化と省力化対象工程の抽出**\n3. **原価根拠に基づく顧客別の段階的価格改定**\n4. **省力化設備投資のROI試算と補助金活用**\nの順序で進めるのが最も確実です。この対話結果をSTEP 4・5の経営改善レポートに反映しました！`
+        });
+        renderChatOptions([
+          "STEP 4の優先順位分析へ進む →"
+        ]);
+      } else {
+        goToStep(4);
+        return;
+      }
+      renderAIChat();
+    }
+
+    function sendCustomChatMessage() {
+      const input = document.getElementById("ai-chat-input");
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = "";
+      handleChatOptionClick(val);
+    }
+
+    function updateChatProcessBar(stage) {
+      const labels = ["STEP 1: 課題の把握", "STEP 2: 原因の仮説", "STEP 3: 真因の確認", "STEP 4: 解決方針の策定"];
+      document.getElementById("chat-stage-badge").textContent = labels[stage - 1] || labels[3];
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`proc-${i}`);
+        if (i < stage) {
+          el.className = "bg-emerald-600 text-white py-1 rounded";
+        } else if (i === stage) {
+          el.className = "bg-blue-600 text-white py-1 rounded ring-2 ring-blue-300";
+        } else {
+          el.className = "bg-slate-700 text-slate-400 py-1 rounded";
+        }
+      }
+    }
+
+    function renderAIChat() {
+      const container = document.getElementById("ai-chat-history");
+      container.innerHTML = chatHistory.map(item => {
+        if (item.role === "ai") {
+          return `
+            <div class="flex items-start space-x-2">
+              <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold">AI</div>
+              <div class="bg-slate-800 border border-slate-700 text-slate-100 rounded-2xl rounded-tl-none px-3.5 py-2.5 whitespace-pre-line leading-relaxed max-w-[90%]">${item.text}</div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="flex items-start justify-end space-x-2">
+              <div class="bg-blue-600 text-white rounded-2xl rounded-tr-none px-3.5 py-2 whitespace-pre-line max-w-[85%]">${item.text}</div>
+            </div>
+          `;
+        }
+      }).join("");
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderChatOptions(opts) {
+      const box = document.getElementById("ai-chat-options");
+      box.innerHTML = opts.map(o => `
+        <button onclick="handleChatOptionClick('${o.replace(/'/g, "\\'")}')" class="text-left bg-slate-800 hover:bg-blue-900/60 border border-blue-500/40 text-blue-200 px-2.5 py-1.5 rounded-lg text-[11px] transition">
+          💬 ${o}
+        </button>
+      `).join("");
+    }
+
+    function resetAIChat() {
+      initAIChat();
+    }
+
+    // --- 4. RENDER STEP 2 (30 QUESTIONS + INDUSTRY SPECIFIC) ---
+    function renderCategoryTabs() {
+      const tabContainer = document.getElementById("cat-tabs");
+      let html = `<button onclick="setCatTab(0)" class="px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition ${activeCatTab === 0 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">全10分野 (30問)</button>`;
+      categories.forEach(c => {
+        html += `<button onclick="setCatTab(${c.id})" class="px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition ${activeCatTab === c.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${c.short}</button>`;
+      });
+      tabContainer.innerHTML = html;
+    }
+
+    function setCatTab(catId) {
+      activeCatTab = catId;
+      renderCategoryTabs();
+      renderQuestions30();
+    }
+
+    function renderQuestions30() {
+      const container = document.getElementById("questions-container");
+      const filteredCats = activeCatTab === 0 ? categories : categories.filter(c => c.id === activeCatTab);
+
+      let html = "";
+      filteredCats.forEach(cat => {
+        const qs = questions30.filter(q => q.cat === cat.id);
+        html += `
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-800">${cat.name}</h3>
+              <span class="text-[11px] text-slate-500">3問</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+              ${qs.map(q => {
+                const currentVal = answers30[q.id] ?? 3;
+                return `
+                  <div class="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover:bg-slate-50/60 transition">
+                    <div class="flex items-start space-x-2.5">
+                      <span class="bg-blue-50 text-blue-700 font-bold text-xs px-2 py-0.5 rounded border border-blue-200 shrink-0">${q.id}</span>
+                      <span class="text-xs sm:text-sm font-medium text-slate-800">${q.text}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 shrink-0">
+                      ${answerOptions.map(opt => {
+                        const selected = currentVal === opt.value;
+                        return `
+                          <button type="button" onclick="selectAnswer30('${q.id}', ${opt.value})"
+                            class="px-2.5 py-1 rounded text-[11px] font-semibold border transition ${selected ? opt.color + ' shadow-sm scale-[1.02]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                            ${opt.label}
+                          </button>
+                        `;
+                      }).join("")}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      const answeredCount = Object.keys(answers30).length;
+      document.getElementById("q-progress-count").textContent = answeredCount;
+    }
+
+    function selectAnswer30(qId, val) {
+      answers30[qId] = val;
+      renderQuestions30();
+    }
+
+    function updateIndustryQuestions() {
+      const ind = document.getElementById("comp-industry")?.value || "製造業";
+      const emp = Number(document.getElementById("comp-employees")?.value || 20);
+      const scaleLabel = emp < 10 ? "小規模事業者向け" : emp < 50 ? "中小規模（10〜50名）向け" : "中堅規模（50名以上）向け";
+
+      document.getElementById("ind-special-title").textContent = `${ind} × ${scaleLabel} の業種別追加チェック項目`;
+
+      const indQuestionsMap = {
+        "製造業": [
+          "製品別の標準加工時間と実績時間の差異を把握していますか？",
+          "原材料・電力コストの上昇分を反映した見積ルールがありますか？",
+          "図面管理や生産スケジュールの共有がデジタル化されていますか？",
+          "熟練工の技能継承（動画マニュアル化や多能工化）が進んでいますか？"
+        ],
+        "情報通信業": [
+          "エンジニアの稼働率およびプロジェクト別の粗利率をリアルタイムに把握していますか？",
+          "受託開発だけでなく自社プロダクトや保守などのストック収益がありますか？",
+          "開発プロセスにAIコーディング支援やテスト自動化を導入していますか？",
+          "要件定義の曖昧さによる仕様変更・炎上を防ぐ契約管理ができていますか？"
+        ],
+        "飲食・宿泊業": [
+          "メニュー別の原価率（FLコスト比率）を月次で管理し価格改定していますか？",
+          "GoogleビジネスプロフィールやSNSによる新規集客導線が機能していますか？",
+          "モバイルオーダーやキャッシュレス決済でホール業務を省力化していますか？",
+          "シフト管理やアルバイトの早期戦力化マニュアルが整備されていますか？"
+        ]
+      };
+
+      const list = indQuestionsMap[ind] || [
+        "同業他社と比較した際の「選ばれる明確な理由（USP）」が言語化されていますか？",
+        "顧客単価の引き上げ（松竹梅の価格設計やクロスセル）を実施していますか？",
+        "バックオフィス業務（請求・勤怠・経費）のクラウド化が完了していますか？",
+        "従業員規模に応じた評価制度・権限委譲ルールが機能していますか？"
+      ];
+
+      document.getElementById("ind-special-questions").innerHTML = list.map((qText, idx) => `
+        <label class="flex items-center justify-between bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+          <span class="text-slate-800 font-medium pr-2">業種Q${idx+1}. ${qText}</span>
+          <select class="rounded border border-slate-300 px-2 py-1 text-xs bg-slate-50 shrink-0">
+            <option value="2">課題あり（未対応）</option>
+            <option value="3">一部対応中</option>
+            <option value="5">十分できている</option>
+          </select>
+        </label>
+      `).join("");
+    }
+
+    // --- 5. RENDER STEP 3 (DEEP DIVE TABS & QUESTIONS) ---
+    function renderDeepDiveStep() {
+      // Detect weak fields from 30 questions
+      const catScores = calculateCategoryScores();
+      const weakCats = catScores.filter(c => c.score <= 55).map(c => c.short);
+      const badgeContainer = document.getElementById("detected-weak-fields");
+      if (weakCats.length > 0) {
+        badgeContainer.innerHTML = weakCats.map(w => `
+          <span class="bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold px-2.5 py-0.5 rounded-full">要深掘り: ${w}</span>
+        `).join("");
+      } else {
+        badgeContainer.innerHTML = `<span class="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full">全分野バランス診断モード</span>`;
+      }
+
+      // Render 8 tabs
+      const tabsEl = document.getElementById("deep-dive-tabs");
+      tabsEl.innerHTML = deepDiveFields.map(f => {
+        const isActive = f.key === activeDeepDiveKey;
+        return `
+          <button onclick="selectDeepDiveTab('${f.key}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            ${f.label}
+          </button>
+        `;
+      }).join("");
+
+      // Render questions for active tab
+      const currentField = deepDiveFields.find(f => f.key === activeDeepDiveKey) || deepDiveFields[0];
+      const qArea = document.getElementById("deep-dive-questions-area");
+      qArea.innerHTML = currentField.questions.map(item => {
+        const currentAns = deepDiveAnswers[item.id] || item.opts[0];
+        return `
+          <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+            <div class="text-xs font-bold text-slate-800 mb-2">${item.q}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              ${item.opts.map(opt => {
+                const isSelected = currentAns === opt;
+                return `
+                  <button type="button" onclick="selectDeepDiveAnswer('${item.id}', '${opt}')"
+                    class="text-left px-3 py-2 rounded-lg text-xs border transition flex items-center justify-between ${isSelected ? 'bg-blue-50 border-blue-600 text-blue-800 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}">
+                    <span>${opt}</span>
+                    ${isSelected ? '<span class="text-blue-600 font-bold">✓</span>' : ''}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function selectDeepDiveTab(key) {
+      activeDeepDiveKey = key;
+      renderDeepDiveStep();
+    }
+
+    function selectDeepDiveAnswer(qId, ans) {
+      deepDiveAnswers[qId] = ans;
+      renderDeepDiveStep();
+    }
+
+    // --- 6. SCORE & PRIORITY CALCULATION ENGINE (STEP 4 & 5) ---
+    function calculateCategoryScores() {
+      return categories.map(cat => {
+        const qs = questions30.filter(q => q.cat === cat.id);
+        let sum = 0;
+        let validCount = 0;
+        let unknownCount = 0;
+        qs.forEach(q => {
+          const v = answers30[q.id] ?? 3;
+          if (v > 0) {
+            sum += v;
+            validCount++;
+          } else if (v === -1) {
+            // "わからない" indicates lack of visibility/management -> counts as low score (1.5)
+            sum += 1.5;
+            validCount++;
+            unknownCount++;
+          }
+          // v === -2 ("該当しない") is excluded from denominator
+        });
+        const avg = validCount > 0 ? (sum / validCount) : 3;
+        const score100 = Math.round((avg / 5) * 100);
+        return {
+          ...cat,
+          score: score100,
+          unknownCount
+        };
+      });
+    }
+
+    let radarChartInstance = null;
+
+    function renderAnalysisStep4() {
+      const catScores = calculateCategoryScores();
+
+      // 1. Check Emergency Conditions (Cash shortage / Operating Deficit)
+      const profit = Number(document.getElementById("comp-profit")?.value || 600);
+      const cash = Number(document.getElementById("fin-cash")?.value || 3200);
+      const sales = Number(document.getElementById("comp-sales")?.value || 30000);
+      const monthlySales = sales / 12;
+      const emergencyBanner = document.getElementById("emergency-alert");
+
+      if (profit < 0 || cash < monthlySales * 0.8) {
+        emergencyBanner.classList.remove("hidden");
+        document.getElementById("emergency-alert-text").textContent =
+          `営業赤字（${profit}万円）または手元現預金（月商の${(cash / monthlySales).toFixed(1)}ヶ月分）の低下が見られます。通常スコアにかかわらず、最優先で日次・月次の資金繰り表を作成し、価格転嫁・不採算取引の停止・金融機関への資金調達相談を実施してください。`;
+      } else {
+        emergencyBanner.classList.add("hidden");
+      }
+
+      // 2. Render Radar Chart
+      const ctx = document.getElementById("radarChart").getContext("2d");
+      if (radarChartInstance) radarChartInstance.destroy();
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: catScores.map(c => c.short),
+          datasets: [
+            {
+              label: '自社診断スコア',
+              data: catScores.map(c => c.score),
+              backgroundColor: 'rgba(37, 99, 235, 0.2)',
+              borderColor: 'rgba(37, 99, 235, 1)',
+              pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+              borderWidth: 2
+            },
+            {
+              label: '同業種ベンチマーク平均',
+              data: [65, 60, 62, 58, 60, 55, 58, 62, 60, 60],
+              backgroundColor: 'rgba(148, 163, 184, 0.1)',
+              borderColor: 'rgba(100, 116, 139, 0.8)',
+              borderDash: [4, 4],
+              pointRadius: 2,
+              borderWidth: 1.5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 20, font: { size: 10 } },
+              pointLabels: { font: { size: 11, weight: 'bold' } }
+            }
+          },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+          }
+        }
+      });
+
+      // Subjective vs Objective Gap Insight
+      const coreQ1 = document.getElementById("core-q1")?.value || "原価高騰と利益率の低下";
+      const lowestCats = [...catScores].sort((a, b) => a.score - b.score).slice(0, 2);
+      document.getElementById("gap-insight-box").innerHTML = `
+        <div class="font-bold text-slate-900 mb-1 flex items-center space-x-1">
+          <span class="text-blue-600">●</span>
+          <span>経営者の認識と客観データの照合結果：</span>
+        </div>
+        <p class="leading-relaxed">経営者が自覚されている「${coreQ1.slice(0, 38)}...」に対し、30問診断では<strong>「${lowestCats[0].short} (${lowestCats[0].score}点)」</strong>と<strong>「${lowestCats[1].short} (${lowestCats[1].score}点)」</strong>が特に低く出ています。表面的な利益低下の裏に、原価データの未整備と現場工程の属人化という潜在課題が存在します。</p>
+      `;
+
+      // 3. Priority Scoring Table (Impact 40, Urgency 30, Feasibility 20, ROI 10 = 100)
+      const priorityItems = generatePriorityIssues(catScores);
+      const rankContainer = document.getElementById("priority-ranking-list");
+      rankContainer.innerHTML = priorityItems.map((item, idx) => `
+        <div class="border border-slate-200 rounded-xl p-3.5 hover:border-blue-300 transition bg-slate-50/50">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div class="flex items-center space-x-2.5">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${idx === 0 ? 'bg-rose-600 text-white' : idx === 1 ? 'bg-amber-500 text-white' : 'bg-slate-700 text-white'}">
+                優先度 ${idx + 1}位
+              </span>
+              <h4 class="font-bold text-sm text-slate-900">${item.title}</h4>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-xs text-slate-500">総合優先スコア:</span>
+              <span class="text-lg font-extrabold ${idx === 0 ? 'text-rose-600' : 'text-blue-700'}">${item.total}</span>
+              <span class="text-xs text-slate-400">/100点</span>
+            </div>
+          </div>
+
+          <!-- 4 Sub-score bars -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] bg-white p-2.5 rounded-lg border border-slate-200">
+            <div>
+              <div class="flex justify-between text-slate-500"><span>影響度(40)</span><span class="font-bold text-slate-800">${item.impact}/40</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-rose-500 h-1.5 rounded-full" style="width:${(item.impact/40)*100}%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-slate-500"><span>緊急性(30)</span><span class="font-bold text-slate-800">${item.urgency}/30</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-amber-500 h-1.5 rounded-full" style="width:${(item.urgency/30)*100}%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-slate-500"><span>実現性(20)</span><span class="font-bold text-slate-800">${item.feasibility}/20</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width:${(item.feasibility/20)*100}%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-slate-500"><span>費用対効果(10)</span><span class="font-bold text-slate-800">${item.roi}/10</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1"><div class="bg-emerald-500 h-1.5 rounded-full" style="width:${(item.roi/10)*100}%"></div></div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-600 mt-2">${item.reason}</p>
+        </div>
+      `).join("");
+
+      // 4. Causal Relationship Map
+      document.getElementById("causal-map-container").innerHTML = `
+        <div class="bg-slate-50 border-2 border-slate-300 rounded-xl p-4 relative flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-bold bg-slate-800 text-white px-2 py-0.5 rounded">STEP A：根本原因（着手点）</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">製品別原価の未把握＆業務工程の属人化</h4>
+            <p class="text-xs text-slate-600 mt-1">どの製品・工程で利益が漏れているかデータで見えておらず、ベテラン依存で手作業が多い状態。</p>
+          </div>
+          <div class="mt-3 text-right text-xs font-bold text-blue-600">ここを可視化・標準化すると ➔</div>
+        </div>
+        <div class="bg-blue-50/70 border-2 border-blue-300 rounded-xl p-4 relative flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded">STEP B：直接的改善（優先2位解消）</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">業務の非効率解消・段取り時間の短縮</h4>
+            <p class="text-xs text-slate-600 mt-1">ボトルネック工程の省力化と標準化により、残業時間削減と1人当たり生産性が向上。</p>
+          </div>
+          <div class="mt-3 text-right text-xs font-bold text-blue-600">原価根拠と余力が生まれ ➔</div>
+        </div>
+        <div class="bg-rose-50/70 border-2 border-rose-300 rounded-xl p-4 relative flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-bold bg-rose-600 text-white px-2 py-0.5 rounded">STEP C：最優先課題の解決（優先1位解消）</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">適正な価格転嫁と営業利益率の回復</h4>
+            <p class="text-xs text-slate-600 mt-1">原価データに基づく納得感ある価格改定交渉と、不採算ロットの見直しで営業利益率が大幅改善。</p>
+          </div>
+          <div class="mt-3 text-right text-xs font-bold text-rose-600">収益原資が確保でき ➔</div>
+        </div>
+        <div class="bg-emerald-50/70 border-2 border-emerald-300 rounded-xl p-4 relative flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded">STEP D：持続的成長（優先3位・4位解消）</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">待遇改善による人材定着＆AI・省力化投資</h4>
+            <p class="text-xs text-slate-600 mt-1">増えた利益を賃上げ・採用とAI/省力化設備へ再投資する好循環（成長スパイラル）が確立。</p>
+          </div>
+          <div class="mt-3 text-right text-xs font-bold text-emerald-700">★3年後の理想像を達成</div>
+        </div>
+      `;
+
+      // 5. METI Local Benchmark 6 Financial Indicators Calculation
+      renderLocalBenchmarkMetrics();
+    }
+
+    function generatePriorityIssues(catScores) {
+      const ind = document.getElementById("comp-industry")?.value || "製造業";
+      if (ind === "情報通信業") {
+        return [
+          { title: "1位　エンジニア採用難と特定人材への業務集中", impact: 36, urgency: 27, feasibility: 17, roi: 9, total: 89, reason: "PM・シニア層への負荷集中により案件受注上限と離職リスクが同時に発生しているため最優先。" },
+          { title: "2位　案件別工数・利益率管理の甘さ（不採算案件の発生）", impact: 34, urgency: 25, feasibility: 18, roi: 9, total: 86, reason: "要件変更時の追加請求ルールと工数可視化を整えるだけで即座に利益率が改善可能。" },
+          { title: "3位　開発・バックオフィス業務における生成AI活用の遅れ", impact: 26, urgency: 20, feasibility: 18, roi: 8, total: 72, reason: "AIコーディング・ドキュメント自動生成の導入により、採用難を補う生産性向上が見込める。" },
+          { title: "4位　受託依存からの脱却（自社ストック型収益の構築）", impact: 28, urgency: 14, feasibility: 12, roi: 7, total: 61, reason: "中長期の安定成長に不可欠だが、まずは現有案件の収益性と余力確保が先決。" }
+        ];
+      }
+      // Default / Manufacturing model matching prompt's exact example (90, 82, 72, 48)
+      return [
+        { title: "1位　利益率の低下（製造原価の上昇と価格転嫁の遅れ）", impact: 38, urgency: 28, feasibility: 15, roi: 9, total: 90, reason: "営業利益率が5%→2%へ低下しており、製品別原価の把握と価格見直しが企業存続・成長の最重要課題。" },
+        { title: "2位　業務の非効率（工程の属人化と段取り・手作業のムダ）", impact: 32, urgency: 24, feasibility: 18, roi: 8, total: 82, reason: "業務改善・標準化を進めることが、そのまま原価低減（1位の利益率向上）と残業削減に直結する。" },
+        { title: "3位　人材採用の難しさ・技能継承の遅れ", impact: 30, urgency: 20, feasibility: 14, roi: 8, total: 72, reason: "ベテラン依存を解消するマニュアル化と省力化を先行させることで、採用ハードルを引き下げられる。" },
+        { title: "4位　AI活用・高度な自動化の遅れ", impact: 18, urgency: 10, feasibility: 12, roi: 8, total: 48, reason: "まずは基本データのデジタル化（原価・工程管理）を整えた後に導入する方が失敗リスクが低い。" }
+      ];
+    }
+
+    function renderLocalBenchmarkMetrics() {
+      const sales = Number(document.getElementById("comp-sales")?.value || 30000);
+      const prevSales = Number(document.getElementById("fin-prev-sales")?.value || 31500);
+      const profit = Number(document.getElementById("comp-profit")?.value || 600);
+      const emp = Number(document.getElementById("comp-employees")?.value || 20);
+      const valueAdded = Number(document.getElementById("fin-value-added")?.value || 11000);
+      const totalAssets = Number(document.getElementById("fin-total-assets")?.value || 24000);
+      const netAssets = Number(document.getElementById("fin-net-assets")?.value || 7200);
+      const cash = Number(document.getElementById("fin-cash")?.value || 3200);
+      const debt = Number(document.getElementById("fin-debt")?.value || 12500);
+      const dep = Number(document.getElementById("fin-depreciation")?.value || 1200);
+      const rec = Number(document.getElementById("fin-receivables")?.value || 5500);
+      const inv = Number(document.getElementById("fin-inventory")?.value || 3800);
+      const pay = Number(document.getElementById("fin-payables")?.value || 2800);
+
+      // METI 6 Formulas
+      // 1. 売上持続性（売上高増加率）
+      const salesGrowth = prevSales > 0 ? (((sales - prevSales) / prevSales) * 100).toFixed(1) : "0.0";
+      // 2. 収益性（営業利益率）
+      const opMargin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "0.0";
+      // 3. 生産性（労働生産性 = 付加価値額 / 従業員数）
+      const laborProd = emp > 0 ? Math.round(valueAdded / emp) : 0;
+      // 4. 健全性（EBITDA有利子負債倍率 = (借入金 - 現預金) / (営業利益 + 減価償却費)）
+      const ebitda = profit + dep;
+      const ebitdaMultiple = ebitda > 0 ? ((debt - cash) / ebitda).toFixed(1) : "要注意";
+      // 5. 効率性（営業運転資本回転期間 = (売掛金 + 棚卸資産 - 買掛金) / 月商）
+      const monthlySales = sales / 12;
+      const workingCapMonths = monthlySales > 0 ? ((rec + inv - pay) / monthlySales).toFixed(1) : "0.0";
+      // 6. 安全性（自己資本比率 = 純資産 / 総資産）
+      const equityRatio = totalAssets > 0 ? ((netAssets / totalAssets) * 100).toFixed(1) : "0.0";
+
+      const cards = [
+        { title: "① 売上増加率（売上持続性）", val: `${salesGrowth}%`, status: Number(salesGrowth) >= 0 ? "良好" : "低下傾向", warn: Number(salesGrowth) < 0, desc: `前期 ${prevSales.toLocaleString()}万円 → 今期 ${sales.toLocaleString()}万円。既存顧客の発注減または単価停滞の影響。` },
+        { title: "② 営業利益率（収益性）", val: `${opMargin}%`, status: Number(opMargin) >= 5 ? "優良" : "改善急務", warn: Number(opMargin) < 4, desc: `営業利益 ${profit.toLocaleString()}万円。原価上昇に対する価格転嫁の遅れと不採算品が利益を圧迫。` },
+        { title: "③ 労働生産性（1人当たり付加価値）", val: `${laborProd}万円/人`, status: laborProd >= 600 ? "標準以上" : "向上余地大", warn: laborProd < 600, desc: `付加価値額 ${valueAdded.toLocaleString()}万円 ÷ ${emp}名。段取り効率化と省力化投資で引き上げ可能。` },
+        { title: "④ EBITDA有利子負債倍率（健全性）", val: `${ebitdaMultiple}倍`, status: Number(ebitdaMultiple) <= 7 ? "健全圏内" : "借入負担重", warn: Number(ebitdaMultiple) > 7, desc: `(借入金-現預金)÷(営業利益+減価償却費)。営業利益を+600万円改善すると約3.9倍へ大幅良化。` },
+        { title: "⑤ 営業運転資本回転期間（資金繰り）", val: `${workingCapMonths}ヶ月`, status: Number(workingCapMonths) <= 2.0 ? "適正" : "資金滞留気味", warn: Number(workingCapMonths) > 2.0, desc: `売掛金(${rec}万)+在庫(${inv}万)-買掛金(${pay}万)。適正在庫化と回収サイト短縮でキャッシュ創出可能。` },
+        { title: "⑥ 自己資本比率（財務安全性）", val: `${equityRatio}%`, status: Number(equityRatio) >= 30 ? "安定(30%以上)" : "資本増強推奨", warn: Number(equityRatio) < 30, desc: `純資産 ${netAssets.toLocaleString()}万円 ÷ 総資産 ${totalAssets.toLocaleString()}万円。金融機関からの信用力は維持。` }
+      ];
+
+      document.getElementById("locaben-metrics-grid").innerHTML = cards.map(c => `
+        <div class="p-4 rounded-xl border ${c.warn ? 'bg-amber-50/50 border-amber-300' : 'bg-slate-50 border-slate-200'}">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">${c.title}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${c.warn ? 'bg-amber-200 text-amber-900' : 'bg-emerald-100 text-emerald-800'}">${c.status}</span>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900 mt-1">${c.val}</div>
+          <p class="text-[11px] text-slate-600 mt-1.5 leading-relaxed">${c.desc}</p>
+        </div>
+      `).join("");
+    }
+
+    // --- 7. RENDER STEP 5 (FINAL REPORT & ROI SIMULATOR) ---
+    function renderFinalReportStep5() {
+      const compName = document.getElementById("comp-name")?.value || "株式会社サンプル製作所";
+      const compLoc = document.getElementById("comp-location")?.value || "大阪府東大阪市";
+      const compInd = document.getElementById("comp-industry")?.value || "製造業";
+      const emp = Number(document.getElementById("comp-employees")?.value || 20);
+      const sales = Number(document.getElementById("comp-sales")?.value || 30000);
+      const profit = Number(document.getElementById("comp-profit")?.value || 600);
+
+      const catScores = calculateCategoryScores();
+      const totalAvg = Math.round(catScores.reduce((acc, c) => acc + c.score, 0) / catScores.length);
+      const importantIssuesCount = catScores.filter(c => c.score < 60).length || 3;
+
+      document.getElementById("rep-date").textContent = `診断日: ${new Date().toLocaleDateString('ja-JP')}`;
+      document.getElementById("rep-company-name").textContent = compName;
+      document.getElementById("rep-company-sub").textContent = `${compInd}・従業員${emp}名・年商${(sales/10000).toFixed(1)}億円（${compLoc}）`;
+      document.getElementById("rep-total-score").textContent = totalAvg;
+      document.getElementById("rep-issue-count").textContent = importantIssuesCount;
+
+      const opMargin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : "2.0";
+      document.getElementById("rep-top-issue-title").textContent =
+        compInd === "情報通信業" ? "エンジニア稼働の逼迫と案件別採算管理の遅れ" :
+        compInd === "飲食・宿泊業" ? "原材料・光熱費高騰によるFLコスト上昇と集客導線の弱さ" :
+        "製造原価の上昇と利益率の低下（価格転嫁および工程効率化の遅れ）";
+
+      document.getElementById("rep-top-issue-desc").textContent =
+        `直近期の営業利益率は ${opMargin}%（営業利益 ${profit.toLocaleString()}万円）。原材料価格・労務費の上昇、作業効率の低下（属人化）、および販売価格への転嫁不足が複合的に絡み合っています。AI対話深掘りの結果、単なる値下げ競争や精神論の営業強化ではなく、「製品別原価の可視化 → 省力化工程の抽出 → 根拠ある価格改定」の順序で取り組むことが最短の改善ルートと判定されました。`;
+
+      // Solutions Comparison Table
+      const solutions = [
+        {
+          name: "1. 製品別原価を計算し、不採算商品を特定",
+          detail: "主要製品・取引先別の実際原価（材料費＋加工時間×時間単価）を算出し、赤字・低採算ロットを特定する",
+          cost: "0〜10万円（社内工数＋Excel/クラウド）",
+          effect: "大（利益漏れの即時特定）",
+          diff: "低（30日以内に実施可能）",
+          rec: "★★★ 最優先"
+        },
+        {
+          name: "2. 製造・業務工程を可視化し、省力化対象工程を抽出",
+          detail: "段取り替えや手作業のボトルネック工程を特定し、標準作業手順書（動画マニュアル）を整備する",
+          cost: "10〜30万円",
+          effect: "中〜大（残業・手戻り20%減）",
+          diff: "中（現場リーダー巻き込み）",
+          rec: "★★★ 最優先"
+        },
+        {
+          name: "3. 製品別の価格改定・取引条件見直しを検討",
+          detail: "原価上昇のエビデンス資料を作成し、主要顧客へ段階的な価格転嫁（またはロット統合）を交渉する",
+          cost: "0円",
+          effect: "特大（粗利率1〜3%直結改善）",
+          diff: "中（原価根拠があれば成功率高）",
+          rec: "★★★ 必須"
+        },
+        {
+          name: "4. 省力化設備・ITツールの投資回収を試算し導入",
+          detail: "抽出されたボトルネック工程に対し、省力化機器・生産管理システムを導入（補助金活用で負担軽減）",
+          cost: "300〜800万円（補助後150〜400万）",
+          effect: "大（生産性15%向上・採用難緩和）",
+          diff: "中（60〜90日目に選定・発注）",
+          rec: "★★☆ 第2フェーズ"
+        }
+      ];
+
+      document.getElementById("rep-solutions-table").innerHTML = solutions.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 font-bold text-slate-900">${s.name}</td>
+          <td class="py-3 px-3 text-slate-600">${s.detail}</td>
+          <td class="py-3 px-3 font-medium text-slate-700">${s.cost}</td>
+          <td class="py-3 px-3 font-bold text-emerald-700">${s.effect}</td>
+          <td class="py-3 px-3 text-slate-600">${s.diff}</td>
+          <td class="py-3 px-3"><span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[11px]">${s.rec}</span></td>
+        </tr>
+      `).join("");
+
+      // 90-Day Roadmap
+      document.getElementById("rep-roadmap-grid").innerHTML = `
+        <div class="border-2 border-blue-200 bg-blue-50/40 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="bg-blue-600 text-white text-xs font-bold px-2.5 py-0.5 rounded">1〜30日（Phase 1）</span>
+            <span class="text-[11px] font-bold text-blue-800">担当：経営者・経理/現場責任者</span>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900 mb-2">原価・工程分析と改善対象の決定</h4>
+          <ul class="space-y-1.5 text-xs text-slate-700 list-disc pl-4">
+            <li>売上上位20品目（または主要取引先5社）の製品別粗利率を算出</li>
+            <li>現場の作業時間を計測し、ボトルネック工程（段取り・手待ち）を特定</li>
+            <li>不採算となっているワースト5案件の原因を特定</li>
+          </ul>
+          <div class="mt-3 pt-2 border-t border-blue-200/60 text-[11px] font-bold text-slate-800">
+            達成KPI：製品別原価一覧表の完成（100%）
+          </div>
+        </div>
+
+        <div class="border-2 border-indigo-200 bg-indigo-50/40 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-0.5 rounded">31〜60日（Phase 2）</span>
+            <span class="text-[11px] font-bold text-indigo-800">担当：経営者・営業/製造リーダー</span>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900 mb-2">価格見直し・作業手順の改善</h4>
+          <ul class="space-y-1.5 text-xs text-slate-700 list-disc pl-4">
+            <li>原材料・エネルギー高騰の根拠資料を作成し、不採算品から価格改定交渉を実施</li>
+            <li>属人化している段取り作業を標準化（スマホ動画等で手順書作成）</li>
+            <li>重複している事務手入力（受発注・日報）の定型化</li>
+          </ul>
+          <div class="mt-3 pt-2 border-t border-indigo-200/60 text-[11px] font-bold text-slate-800">
+            達成KPI：対象取引先の80%へ価格改定打診完了・段取り時間15%削減
+          </div>
+        </div>
+
+        <div class="border-2 border-emerald-200 bg-emerald-50/40 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="bg-emerald-600 text-white text-xs font-bold px-2.5 py-0.5 rounded">61〜90日（Phase 3）</span>
+            <span class="text-[11px] font-bold text-emerald-800">担当：経営者・認定支援機関</span>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900 mb-2">効果測定と省力化設備投資の検討</h4>
+          <ul class="space-y-1.5 text-xs text-slate-700 list-disc pl-4">
+            <li>価格改定および工程改善による月次粗利率の改善効果を測定</li>
+            <li>さらなる省力化に向けた設備・ITツールの見積取得と投資回収年数の試算</li>
+            <li>投資計画に合致する補助金制度の公募要領照合・申請準備</li>
+          </ul>
+          <div class="mt-3 pt-2 border-t border-emerald-200/60 text-[11px] font-bold text-slate-800">
+            達成KPI：月次営業利益率 +2.0%改善ペースの定着
+          </div>
+        </div>
+      `;
+
+      // SWOT & External Environment
+      const products = document.getElementById("comp-products")?.value || "精密部品加工・専門技術サービス";
+      document.getElementById("rep-swot-grid").innerHTML = `
+        <div class="bg-blue-50/60 border border-blue-200 p-4 rounded-xl">
+          <div class="font-bold text-blue-900 mb-1">S：自社の強み（Strengths）</div>
+          <p class="text-slate-700 leading-relaxed">・「${products}」における長年培った品質信頼性と短納期対応力<br>・顧客の細かな要望に応えられる現場の技術力と柔軟性</p>
+        </div>
+        <div class="bg-rose-50/60 border border-rose-200 p-4 rounded-xl">
+          <div class="font-bold text-rose-900 mb-1">W：自社の弱み（Weaknesses）</div>
+          <p class="text-slate-700 leading-relaxed">・製品別の原価管理が未整備で、不採算受注が混在している<br>・特定ベテラン社員への技能依存が高く、省力化・IT化が遅れている</p>
+        </div>
+        <div class="bg-emerald-50/60 border border-emerald-200 p-4 rounded-xl">
+          <div class="font-bold text-emerald-900 mb-1">O：外部環境の機会（Opportunities）</div>
+          <p class="text-slate-700 leading-relaxed">・政府・公的機関による「適正な価格転嫁（パートナーシップ構築宣言）」の後押し<br>・中小企業向けの省力化投資・デジタル化支援策の拡充</p>
+        </div>
+        <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-xl">
+          <div class="font-bold text-amber-900 mb-1">T：外部環境の脅威（Threats）</div>
+          <p class="text-slate-700 leading-relaxed">・原材料費・エネルギー価格・最低賃金の継続的な上昇<br>・生産年齢人口の減少による採用難と技能職の高齢化</p>
+        </div>
+      `;
+
+      // Subsidies Matching (As financing options AFTER verifying business necessity)
+      document.getElementById("rep-subsidies-grid").innerHTML = `
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60 flex flex-col justify-between">
+          <div>
+            <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">省力化・人手不足解消に適合</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">中小企業省力化投資補助金</h4>
+            <p class="text-xs text-slate-600 mt-1">人手不足に悩む中小企業が、IoT・ロボット・省力化機器等を導入して付加価値額や生産性を向上させる取組を支援。</p>
+          </div>
+          <div class="mt-3 pt-2 border-t border-slate-200 text-[11px] text-slate-700">
+            <div><strong>経営上の活用目的：</strong>Phase 3で特定したボトルネック工程の自動化・省人化</div>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60 flex flex-col justify-between">
+          <div>
+            <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded">原価管理・業務効率化に適合</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">IT導入補助金（デジタル化基盤・業務効率化）</h4>
+            <p class="text-xs text-slate-600 mt-1">生産管理・原価管理・受発注・インボイス対応等のクラウドソフトウェアや導入関連費用の負担を軽減。</p>
+          </div>
+          <div class="mt-3 pt-2 border-t border-slate-200 text-[11px] text-slate-700">
+            <div><strong>経営上の活用目的：</strong>Phase 1の「製品別原価・案件別利益」のリアルタイム可視化</div>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60 flex flex-col justify-between">
+          <div>
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">高付加価値化・設備更新に適合</span>
+            <h4 class="font-bold text-sm text-slate-900 mt-2">ものづくり・商業・サービス生産性向上促進補助金</h4>
+            <p class="text-xs text-slate-600 mt-1">革新的な新製品・サービス開発や生産プロセスの抜本的改善に必要な設備投資を支援。</p>
+          </div>
+          <div class="mt-3 pt-2 border-t border-slate-200 text-[11px] text-slate-700">
+            <div><strong>経営上の活用目的：</strong>価格競争から脱却する高付加価値・短納期加工設備の導入</div>
+          </div>
+        </div>
+      `;
+
+      updateROISimulation();
+    }
+
+    function updateROISimulation() {
+      const sales = Number(document.getElementById("comp-sales")?.value || 30000);
+      const currentProfit = Number(document.getElementById("comp-profit")?.value || 600);
+
+      const costRate = Number(document.getElementById("sim-cost-slider")?.value || 2.0);
+      const priceRate = Number(document.getElementById("sim-price-slider")?.value || 1.0);
+      const investAmt = Number(document.getElementById("sim-invest-slider")?.value || 450);
+
+      document.getElementById("sim-cost-val").textContent = costRate.toFixed(1);
+      document.getElementById("sim-price-val").textContent = priceRate.toFixed(1);
+      document.getElementById("sim-invest-val").textContent = investAmt.toLocaleString();
+
+      // Calculate impact (matching prompt example: 2% of 30,000万円 = 600万円)
+      const costImprovement = Math.round(sales * (costRate / 100));
+      const priceImprovement = Math.round(sales * (priceRate / 100));
+      const totalImpact = costImprovement + priceImprovement;
+
+      const newProfit = currentProfit + totalImpact;
+      const newMargin = sales > 0 ? ((newProfit / sales) * 100).toFixed(1) : "0.0";
+
+      document.getElementById("sim-profit-impact").textContent = totalImpact.toLocaleString();
+      document.getElementById("sim-new-margin").textContent =
+        `改善後の想定営業利益: ${newProfit.toLocaleString()}万円 (営業利益率 ${newMargin}%) ※原価改善+${costImprovement}万 / 価格改定+${priceImprovement}万`;
+
+      const paybackText = document.getElementById("sim-payback-text");
+      if (investAmt === 0) {
+        paybackText.textContent = "初期投資0円（運用改善のみで即時利益貢献）";
+      } else if (totalImpact > 0) {
+        const years = (investAmt / totalImpact).toFixed(1);
+        const months = Math.max(1, Math.round((investAmt / totalImpact) * 12));
+        paybackText.textContent = `想定投資回収期間: 約 ${years} 年（約 ${months} ヶ月で回収可能）`;
+      } else {
+        paybackText.textContent = "原価改善または価格改定スライダーを設定してください";
+      }
+    }
+
+    // --- 8. DEMO PRESETS & OCR SIMULATION ---
+    function loadDemoPreset(type) {
+      if (type === "manufacturing") {
+        document.getElementById("comp-name").value = "株式会社サンプル製作所";
+        document.getElementById("comp-location").value = "大阪府東大阪市";
+        document.getElementById("comp-industry").value = "製造業";
+        document.getElementById("comp-founded").value = "1992";
+        document.getElementById("comp-employees").value = "20";
+        document.getElementById("comp-sales").value = "30000";
+        document.getElementById("comp-profit").value = "600";
+        document.getElementById("comp-products").value = "産業機械向け精密金属部品の切削・研削加工";
+        document.getElementById("comp-goal").value = "営業利益率を現在の2%から5%以上へ回復させ、省力化設備の導入と技能継承を完了する";
+
+        document.getElementById("core-q1").value = "原材料価格と電気代が上昇し、営業利益率が5%から2%（600万円）まで低下していること。";
+        document.getElementById("core-q2").value = "高付加価値な難削材・短納期加工で選ばれ、職人の残業を減らしつつ年間営業利益1,500万円以上を安定確保できる会社。";
+        document.getElementById("core-q3").value = "製品別の正確な原価が把握できておらず価格交渉の根拠がないことと、段取り作業がベテラン職人に属人化していること。";
+
+        document.getElementById("fin-prev-sales").value = "31500";
+        document.getElementById("fin-gross-profit").value = "5400";
+        document.getElementById("fin-value-added").value = "11000";
+        document.getElementById("fin-total-assets").value = "24000";
+        document.getElementById("fin-net-assets").value = "7200";
+        document.getElementById("fin-cash").value = "3200";
+        document.getElementById("fin-debt").value = "12500";
+        document.getElementById("fin-depreciation").value = "1200";
+        document.getElementById("fin-receivables").value = "5500";
+        document.getElementById("fin-inventory").value = "3800";
+        document.getElementById("fin-payables").value = "2800";
+        document.getElementById("fin-turnover").value = "2";
+
+        // Set realistic 30 answers (weak in Profit Q7/Q8, Efficiency Q13/Q15, IT Q16/Q17/Q18, HR Q10/Q11)
+        const presetScores = {
+          Q1:3, Q2:4, Q3:3,
+          Q4:3, Q5:4, Q6:2,
+          Q7:1, Q8:2, Q9:3,
+          Q10:2, Q11:2, Q12:3,
+          Q13:2, Q14:2, Q15:1,
+          Q16:2, Q17:2, Q18:1,
+          Q19:3, Q20:3, Q21:2,
+          Q22:3, Q23:3, Q24:2,
+          Q25:3, Q26:3, Q27:2,
+          Q28:2, Q29:3, Q30:3
+        };
+        answers30 = { ...presetScores };
+        document.getElementById("sim-cost-slider").value = "2.0";
+        document.getElementById("sim-price-slider").value = "0.0";
+      } else if (type === "it") {
+        document.getElementById("comp-name").value = "ネクストクラウド株式会社";
+        document.getElementById("comp-location").value = "東京都渋谷区";
+        document.getElementById("comp-industry").value = "情報通信業";
+        document.getElementById("comp-founded").value = "2016";
+        document.getElementById("comp-employees").value = "35";
+        document.getElementById("comp-sales").value = "42000";
+        document.getElementById("comp-profit").value = "1800";
+        document.getElementById("comp-products").value = "業務系Webシステム受託開発・クラウド保守";
+        document.getElementById("comp-goal").value = "受託開発の採算性を改善しつつ、自社SaaS製品の売上比率を30%まで引き上げる";
+
+        document.getElementById("core-q1").value = "シニアエンジニアとPMが慢性的に不足しており、案件の引き合いはあるのに受注を断らざるを得ないこと。";
+        document.getElementById("core-q2").value = "生成AI活用で開発生産性を1.5倍にし、自社プロダクトと高単価準委任で営業利益率12%を達成している状態。";
+        document.getElementById("core-q3").value = "プロジェクトごとの工数超過（仕様変更の無償対応）と、中堅層の育成仕組み化の遅れ。";
+
+        answers30 = {
+          Q1:4, Q2:3, Q3:3, Q4:4, Q5:4, Q6:3, Q7:2, Q8:2, Q9:4,
+          Q10:1, Q11:2, Q12:3, Q13:2, Q14:1, Q15:2, Q16:4, Q17:3, Q18:2,
+          Q19:4, Q20:3, Q21:3, Q22:3, Q23:3, Q24:2, Q25:4, Q26:4, Q27:3, Q28:3, Q29:3, Q30:4
+        };
+      } else if (type === "retail") {
+        document.getElementById("comp-name").value = "有限会社マルシェダイニング";
+        document.getElementById("comp-location").value = "福岡県福岡市";
+        document.getElementById("comp-industry").value = "飲食・宿泊業";
+        document.getElementById("comp-founded").value = "2008";
+        document.getElementById("comp-employees").value = "15";
+        document.getElementById("comp-sales").value = "12000";
+        document.getElementById("comp-profit").value = "250";
+        document.getElementById("comp-products").value = "地域食材を活かしたレストラン運営（3店舗）および惣菜EC";
+        document.getElementById("comp-goal").value = "店舗ごとのFL比率を適正化し、リピーター獲得とEC物販で営業利益率8%を確保する";
+
+        document.getElementById("core-q1").value = "食材原価と光熱費・アルバイト時給の上昇で店舗利益が圧迫され、新規客の集客コストも上がっていること。";
+        document.getElementById("core-q2").value = "看板メニューのブランディングとLINE会員化で広告費に頼らず集客でき、スタッフが長く働けるお店。";
+        document.getElementById("core-q3").value = "メニュー別の粗利管理ができていないことと、SNS・リピート販促を担当できる人材がいないこと。";
+
+        answers30 = {
+          Q1:2, Q2:3, Q3:2, Q4:2, Q5:2, Q6:1, Q7:1, Q8:2, Q9:2,
+          Q10:2, Q11:2, Q12:3, Q13:2, Q14:2, Q15:2, Q16:2, Q17:2, Q18:1,
+          Q19:3, Q20:3, Q21:3, Q22:3, Q23:2, Q24:2, Q25:2, Q26:2, Q27:3, Q28:2, Q29:2, Q30:2
+        };
+      }
+
+      updateIndustryQuestions();
+      renderQuestions30();
+      renderDeepDiveStep();
+      initAIChat();
+      renderAnalysisStep4();
+      renderFinalReportStep5();
+    }
+
+    function simulateOCRUpload(event) {
+      const file = event.target.files[0];
+      const fileName = file ? file.name : "決算報告書_直近3期.pdf";
+      const statusBox = document.getElementById("ocr-status");
+      const statusText = document.getElementById("ocr-status-text");
+      statusBox.classList.remove("hidden");
+      statusText.textContent = `「${fileName}」をAI-OCR解析中... 損益計算書(P/L)・貸借対照表(B/S)・製造原価報告書から財務数値を自動反映しました。`;
+      loadDemoPreset('manufacturing');
+    }
+
+    // --- 9. NAVIGATION & STORAGE ---
+    function goToStep(stepNum) {
+      document.querySelectorAll(".step-section").forEach((sec, idx) => {
+        if (idx + 1 === stepNum) {
+          sec.classList.remove("hidden");
+        } else {
+          sec.classList.add("hidden");
+        }
+      });
+
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById(`step-btn-${i}`);
+        const badge = btn.querySelector("span");
+        btn.classList.remove("step-active", "step-done", "border-slate-200");
+        if (i === stepNum) {
+          btn.classList.add("step-active");
+          badge.className = "w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0";
+        } else if (i < stepNum) {
+          btn.classList.add("step-done");
+          badge.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0";
+        } else {
+          btn.classList.add("border-slate-200");
+          badge.className = "w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0";
+        }
+      }
+
+      if (stepNum === 2) {
+        renderCategoryTabs();
+        renderQuestions30();
+        updateIndustryQuestions();
+      } else if (stepNum === 3) {
+        renderDeepDiveStep();
+      } else if (stepNum === 4) {
+        renderAnalysisStep4();
+      } else if (stepNum === 5) {
+        renderFinalReportStep5();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(msg) {
+      let toast = document.getElementById("app-toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "app-toast";
+        toast.className = "fixed bottom-5 right-5 z-50 bg-slate-900 text-white border border-slate-700 px-4 py-3 rounded-xl shadow-xl text-xs font-bold flex items-center space-x-2 transition-opacity duration-300";
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = `<span class="text-emerald-400">✓</span><span>${msg}</span>`;
+      toast.style.opacity = "1";
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.style.opacity = "0";
+      }, 3500);
+    }
+
+    function saveToStorage() {
+      const data = {
+        compName: document.getElementById("comp-name").value,
+        answers30,
+        deepDiveAnswers
+      };
+      try {
+        localStorage.setItem("ai_mgmt_consultant_state", JSON.stringify(data));
+      } catch (e) {}
+      showToast("現在の診断回答データを一時保存しました。");
+    }
+
+    // --- 10. PDF EXPORT / STANDALONE HTML / TEXT COPY ---
+    async function exportReportPDF() {
+      const reportEl = document.getElementById("printable-report-area");
+      const btnText = document.getElementById("btn-pdf-text");
+      const compName = document.getElementById("comp-name")?.value || "サンプル企業";
+
+      if (typeof html2pdf === "undefined") {
+        downloadStandaloneReport();
+        return;
+      }
+
+      const originalText = btnText.textContent;
+      btnText.textContent = "PDF生成中...";
+
+      try {
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: `AI経営改善提案レポート_${compName}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await html2pdf().set(opt).from(reportEl).save();
+        showToast("PDFファイルのダウンロードを開始しました。");
+      } catch (err) {
+        downloadStandaloneReport();
+      } finally {
+        btnText.textContent = originalText;
+      }
+    }
+
+    function downloadStandaloneReport() {
+      const reportEl = document.getElementById("printable-report-area");
+      const compName = document.getElementById("comp-name")?.value || "サンプル企業";
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>AI経営改善提案レポート - ${compName}</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans JP', sans-serif; background: #f8fafc; padding: 24px; }
+    @media print {
+      .no-print-bar { display: none !important; }
+      body { background: #ffffff; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-5xl mx-auto mb-4 bg-slate-900 text-white p-4 rounded-xl flex items-center justify-between no-print-bar">
+    <div class="text-xs">このファイルをブラウザで開いています。右のボタンまたは Ctrl+P (Macは Cmd+P) で印刷・PDF保存できます。</div>
+    <button onclick="window.print()" class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">今すぐ印刷 / PDF保存</button>
+  </div>
+  <div class="max-w-5xl mx-auto">${reportEl.outerHTML}</div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `AI経営改善提案レポート_${compName}_印刷用.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("印刷用レポートファイル(.html)を保存しました。開くと印刷できます。");
+    }
+
+    function copyReportText() {
+      const compName = document.getElementById("rep-company-name")?.textContent || "";
+      const compSub = document.getElementById("rep-company-sub")?.textContent || "";
+      const score = document.getElementById("rep-total-score")?.textContent || "";
+      const topIssue = document.getElementById("rep-top-issue-title")?.textContent || "";
+      const topDesc = document.getElementById("rep-top-issue-desc")?.textContent || "";
+      const profitImpact = document.getElementById("sim-profit-impact")?.textContent || "";
+
+      const summaryText = `【AI経営改善提案レポート】
+■ 対象企業: ${compName}（${compSub}）
+■ 総合評価スコア: ${score} / 100点
+
+■ 最優先の経営課題
+${topIssue}
+${topDesc}
+
+■ 具体的な改善提案（優先順）
+1. 製品別原価を計算し、不採算商品を特定
+2. 製造・業務工程を可視化し、省力化対象工程を抽出
+3. 製品別の価格改定・取引条件見直しを検討
+4. 省力化設備・ITツールの投資回収を試算し導入
+
+■ 90日間の行動計画
+・1〜30日：原価・工程分析と改善対象の決定
+・31〜60日：価格見直し・作業手順の標準化
+・61〜90日：効果測定と省力化設備投資・補助金活用の検討
+
+■ 期待効果の試算
+年間営業利益の改善可能性：+${profitImpact}万円 / 年`;
+
+      const tempArea = document.createElement("textarea");
+      tempArea.value = summaryText;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempArea);
+      showToast("レポート内容をクリップボードにコピーしました！");
+    }
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      loadDemoPreset('manufacturing');
+    });
+  </script>
+</body>
+</html>
